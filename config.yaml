@@ -1,0 +1,29 @@
+sampleType:
+    Collibri_standard_protocol: Collibri_standard_protocol
+    KAPA_mRNA_HyperPrep_: KAPA_mRNA_HyperPrep_
+tissueType:
+    HBR: HBR
+    UHRR: UHRR
+k:
+    Collibri: Collibri
+    KAPA: KAPA
+repeats:
+    ng-2_S1: ng-2_S1
+    ng-2_S3: ng-2_S3
+    ng-3_S2: ng-3_S2
+    ng-3_S4: ng-3_S4
+rna:
+    RNA-2_S5: RNA-2_S5
+    RNA-2_S7: RNA-2_S7
+    RNA-3_S6: RNA-3_S6
+    RNA-3_S8: RNA-3_S8
+
+repeats1:
+    ng-2_S1: ng-2_S1
+    ng-2_S3: ng-2_S3
+    ng-3_S2: ng-3_S2
+    ng-3_S4: ng-3_S4
+    ng_total_RNA-2_S5: ng_total_RNA-2_S5
+    ng_total_RNA-2_S7: ng_total_RNA-2_S7
+    ng_total_RNA-3_S6: ng_total_RNA-3_S6
+    ng_total_RNA-3_S8: ng_total_RNA-3_S8
