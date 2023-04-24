@@ -1,5 +1,7 @@
 configfile: "config.yaml"
 
+(READS,) = glob_wildcards("data/RNA-seq-sample-data/{read}_R1_001.fastq.gz")
+
 def test_input(sampleType, tissueType, directory="RNA-seq-sample-data"):
     print("sample type")
     print(sampleType)
@@ -35,6 +37,9 @@ def test_input(sampleType, tissueType, directory="RNA-seq-sample-data"):
     print(results)
     return results
 
+rule all:
+    input:
+        expand("star/{read}/aligned.bam", read=READS)
 rule extract_data:
     input:
         "data/play_data_ref_annot.tar.gz"
@@ -110,3 +115,42 @@ rule multiqc_trimmed:
         "qc/multiqc_trimmed_report_multiqc_report.html"
     shell:
         "multiqc qc/trimmed_qc -o qc/ --title multiqc_trimmed_report"
+
+rule star_index:
+    input:
+        "genome/chr19_20Mb.fa"
+    output:
+        directory("genome/chr19_20Mb")
+    params:
+        sjdbOverhang = 100
+    shell:
+        """
+        echo {params.sjdbOverhang}
+        STAR --runThreadN 4 --runMode genomeGenerate --genomeDir {output} \
+        --genomeFastaFiles {input}
+        """
+
+#rule star_align:
+#    input:
+#        reads = test_input(config["sampleType"], config["tissueType"]),
+#        index = directory("genome/chr19_20Mb")
+#    output:
+#        "star_aligned/Aligned.sortedByCoord.out.bam"
+#    shell:
+#        """
+#        mkdir -p star_aligned
+#        STAR --genomeDir {input.index} --readFilesIn {input.reads} \
+#        --outFileNamePrefix star_aligned/ --outSAMtype BAM SortedByCoordinate
+#        """
+
+rule star_pe:
+    input:
+        fq1=["data/RNA-seq-sample-data/{read}_R1_001.fastq.gz", "data/RNA-seq-sample-data/{read}_R2_001.fastq.gz"],
+        #fq2=["data/RNA-seq-sample-data/{sample}_R2_001.fastaq.gz"],
+        index= directory("genome/chr19_20Mb")
+    output:
+        aln="star/{read}/aligned.bam"
+    shell:
+        """
+        STAR --genomeDir {input.index} --readFilesIn {input.fq1} --outFileNamePrefix star/ --outSAMtype BAM SortedByCoordinate --readFilesCommand gunzip -c --outStd BAM_SortedByCoordinate > {output.aln}
+        """
