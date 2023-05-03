@@ -39,7 +39,9 @@ def test_input(sampleType, tissueType, directory="RNA-seq-sample-data"):
 
 rule all:
     input:
-        expand("star/{read}/aligned.bam", read=READS)
+        #expand("star/{read}/aligned.bam", read=READS),
+        #expand("mapped/{read}.bam.bai", read=READS),
+        expand("results/{read}.featureCounts", read=READS)
 rule extract_data:
     input:
         "data/play_data_ref_annot.tar.gz"
@@ -145,12 +147,49 @@ rule star_index:
 
 rule star_pe:
     input:
-        fq1=["data/RNA-seq-sample-data/{read}_R1_001.fastq.gz", "data/RNA-seq-sample-data/{read}_R2_001.fastq.gz"],
+        fq1=["data/trimmed/{read}_R1_001.fastq.gz", "data/trimmed/{read}_R2_001.fastq.gz"],
         #fq2=["data/RNA-seq-sample-data/{sample}_R2_001.fastaq.gz"],
         index= directory("genome/chr19_20Mb")
     output:
-        aln="star/{read}/aligned.bam"
+        aln="star/{read}.bam"
     shell:
         """
         STAR --genomeDir {input.index} --readFilesIn {input.fq1} --outFileNamePrefix star/ --outSAMtype BAM SortedByCoordinate --readFilesCommand gunzip -c --outStd BAM_SortedByCoordinate > {output.aln}
+        """
+
+rule samtools_index:
+    input:
+        bam="star/{read}.bam",
+    output:
+        bai="star/{read}.bam.bai",
+    shell:
+        """
+        echo {input.bam}
+        samtools index {input.bam} {output.bai}
+        """
+
+rule featureCounts:
+    input:
+        samples="star/{read}.bam",
+        bai="star/{read}.bam.bai",
+        annotation="genome/chr19_20Mb.gtf"
+    output:
+        multiext(
+            "results/{read}",
+            ".featureCounts",
+            ".featureCounts.summary"
+        ),
+    params:
+        strand = "1" #if input(" ").startswith("Collibri") else "2"# or "2", depending on the sample preparation method
+    shell:
+        """
+        if [[ "$test" == *"Collibri"* ]]; then
+            strand="1"
+        else
+            strand="2"
+        fi
+        echo "strand"
+        echo $strand
+
+        samtools sort -n {input.samples} | featureCounts -p -t exon -g gene_id -a {input.annotation} -o {output[0]} -s $strand
         """
