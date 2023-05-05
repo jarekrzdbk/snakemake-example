@@ -2,45 +2,10 @@ configfile: "config.yaml"
 
 (READS,) = glob_wildcards("data/RNA-seq-sample-data/{read}_R1_001.fastq.gz")
 
-def test_input(sampleType, tissueType, directory="RNA-seq-sample-data"):
-    print("sample type")
-    print(sampleType)
-    print("tissueType")
-    print(tissueType)
-    results = []
-    for key, valueSampleType in sampleType.items():
-        for tissueKey, valueTissue in tissueType.items():
-                if valueSampleType == "Collibri_standard_protocol":
-                    sample = "Collibri_standard_protocol"
-                    if valueTissue == "HBR":
-                        repeats1_list = ["ng-2_S1", "ng-3_S2"]
-                    else:
-                        repeats1_list = ["ng-2_S3", "ng-3_S4"]
-                    k_str = "Collibri"
-                else:
-                    sample = "KAPA_mRNA_HyperPrep_"
-                    if valueTissue == "HBR":
-                        repeats1_list = ["ng_total_RNA-2_S5", "ng_total_RNA-3_S6"]
-                    else:
-                        repeats1_list = ["ng_total_RNA-2_S7", "ng_total_RNA-3_S8"]
-                    #k_str = "Collibri"
-                    #repeats1_list = [ "ng_total_RNA-2_S7", "ng_total_RNA-3_S8"]
-                    k_str = "KAPA"
-
-                if valueTissue == "HBR":
-                    tissue = "HBR"
-                else:
-                    tissue = "UHRR"
-
-                result= expand("data/{directory}/{sampleType}-{tissueType}-{k}-100_{repeats1}_L001_R{read}_001.fastq.gz", sampleType=sample, tissueType=tissue, k=k_str, repeats1=repeats1_list, read=[1,2], directory=directory, allow_missing=True)     
-                results.extend(result)       
-    print(results)
-    return results
-
 rule all:
     input:
-        #expand("star/{read}/aligned.bam", read=READS),
-        #expand("mapped/{read}.bam.bai", read=READS),
+        "qc/multiqc_report.html",
+        "qc/multiqc_trimmed_report_multiqc_report.html",
         expand("results/{read}.featureCounts", read=READS)
 rule extract_data:
     input:
@@ -54,69 +19,68 @@ rule extract_data:
 
 rule fastqc_raw:
     input:
-        test_input(config["sampleType"], config["tissueType"])
+        fq1=["data/RNA-seq-sample-data/{read}_R{r}_001.fastq.gz"],
+        #test_input(config["sampleType"], config["tissueType"])
     output:
-        directory("qc/raw")
+        fq1=["qc/raw/{read}_R{r}_001_fastqc.html"],
+        #directory("qc/raw")
     shell:
         r"""
-        mkdir -p qc/raw
-        fastqc {input} -o qc/raw
+        fastqc {input.fq1} -o qc/raw
         """
         #"mkdir -p qc/raw" && "fastqc {input} -o qc/raw/"
 
-rule multiqc_raw:
+rule multiqc_dir:
     input:
-        directory("qc/raw")
+        expand("qc/raw/{read}_R{r}_001_fastqc.html", read=READS, r=["1","2"])
     output:
         "qc/multiqc_report.html"
-    shell:
-        "multiqc qc/raw -o qc/"
+    params:
+        extra=""  # Optional: extra parameters for multiqc.
+    log:
+        "logs/multiqc.log"
+    wrapper:
+        "v1.28.0/bio/multiqc"
 
-rule trim_reads:
+rule bbduk_pe:
     input:
-        test_input(config["sampleType"], config["tissueType"])
+        sample=["data/RNA-seq-sample-data/{read}_R1_001.fastq.gz", "data/RNA-seq-sample-data/{read}_R2_001.fastq.gz"],
+        adapters="adapters.fa",
     output:
-        directory("data/trimmed")
-    shell:
-        """
-        mkdir -p qc/trimmed
-        for i in {input}
-        do
-        echo $i
-        filepath=$i
-        drn=$(dirname "$filepath")
-        basename=$(basename "$filepath")
-        prefix="$drn/"
-        suffix="$basename#$prefix"
-        echo "$suffix"
-        bbduk.sh in=$i out="data/trimmed/$basename" ref=adapters.fa ktrim=r k=23 mink=11 hdist=1 tpe tbo qtrim=r trimq=10
-        done
-        """
+        trimmed=["data/trimmed/{read}_R1_001.fastq.gz", "data/trimmed/{read}_R2_001.fastq.gz"]
+    params:
+        extra = lambda w, input: "ref={},adapters,artifacts ktrim=r k=23 mink=11 hdist=1 tpe tbo qtrim=r trimq=10".format(input.adapters),
+    resources:
+        mem_mb=4000,
+    threads: 7
+    wrapper:
+        "v1.28.0/bio/bbtools/bbduk"
         
 rule fastqc_trimmed:
     input:
         #test_input(config["sampleType"], config["tissueType"], "trimmed")
-        directory("data/trimmed")
+        #directory("data/trimmed")
+        fq1=["data/trimmed/{read}_R1_001.fastq.gz", "data/trimmed/{read}_R2_001.fastq.gz"],
     output:
-        directory("qc/trimmed_qc")
+        fq1=["qc/trimmed_qc/{read}_R1_001_fastqc.html", "qc/trimmed_qc/{read}_R2_001_fastqc.html"],
+        #directory("qc/trimmed_qc")
     shell:
-        """
+        r"""
         mkdir -p qc/trimmed_qc
-        dir=data/trimmed/
-        for i in data/trimmed/*;
-        do
-        echo "$i"
-        fastqc "$i"  -o qc/trimmed_qc
-        done
+        fastqc {input.fq1} -o qc/trimmed_qc
         """
 
-rule multiqc_trimmed:
+rule multiqc_dir1:
     input:
-        directory("qc/trimmed_qc")
+        expand("qc/trimmed_qc/{read}_R{r}_001_fastqc.html", read=READS, r=["1","2"])
     output:
         "qc/multiqc_trimmed_report_multiqc_report.html"
-    shell:
-        "multiqc qc/trimmed_qc -o qc/ --title multiqc_trimmed_report"
+    params:
+        extra=""  # Optional: extra parameters for multiqc.
+    log:
+        "logs/multiqc.log"
+    wrapper:
+        "v1.28.0/bio/multiqc"
 
 rule star_index:
     input:
@@ -132,23 +96,9 @@ rule star_index:
         --genomeFastaFiles {input}
         """
 
-#rule star_align:
-#    input:
-#        reads = test_input(config["sampleType"], config["tissueType"]),
-#        index = directory("genome/chr19_20Mb")
-#    output:
-#        "star_aligned/Aligned.sortedByCoord.out.bam"
-#    shell:
-#        """
-#        mkdir -p star_aligned
-#        STAR --genomeDir {input.index} --readFilesIn {input.reads} \
-#        --outFileNamePrefix star_aligned/ --outSAMtype BAM SortedByCoordinate
-#        """
-
 rule star_pe:
     input:
         fq1=["data/trimmed/{read}_R1_001.fastq.gz", "data/trimmed/{read}_R2_001.fastq.gz"],
-        #fq2=["data/RNA-seq-sample-data/{sample}_R2_001.fastaq.gz"],
         index= directory("genome/chr19_20Mb")
     output:
         aln="star/{read}.bam"
@@ -183,6 +133,7 @@ rule featureCounts:
         strand = "1" #if input(" ").startswith("Collibri") else "2"# or "2", depending on the sample preparation method
     shell:
         """
+        export test={input.samples}
         if [[ "$test" == *"Collibri"* ]]; then
             strand="1"
         else
