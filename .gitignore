@@ -4,7 +4,7 @@ mapped_reads
 sorted_reads
 plots
 calls
-data
+data/trimmed
 qc
 results
 star
