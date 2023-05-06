@@ -69,7 +69,7 @@ it is clear that HBR and UHRR are separeted into 2 different clusters.
 more details and figures in separate deseq2.md
 ![deseq2.md](/deseq2.md)
 
-10,11: performed gseq using fgsea.
+10,11: performed gsea using fgsea.
 
 performing on Reactome pathways did not gave promising results, so performed on KEGG pathways.
 
