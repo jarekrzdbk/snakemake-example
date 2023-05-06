@@ -1,0 +1,45 @@
+name: Snakemake CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+
+    - name: Snakemake workflow
+      uses: snakemake/snakemake-github-action@v1
+      with:
+        directory: '.'
+        snakefile: 'Snakefile'
+        args: '--cores 1 --use-conda --conda-cleanup-pkgs cache'
+        stagein: '' # additional preliminary commands to run (can be multiline)
+
+    - name: results
+      uses: actions/upload-artifact@v3
+
+      with:
+        name: results
+        path: results/
+    
+    - name: plots
+      uses: actions/upload-artifact@v3
+
+      with:
+        name: qc_raw
+        path: qc/multiqc_report.html
+
+    - name: qc_trimmed
+      uses: actions/upload-artifact@v3
+
+      with:
+        name: qc_trimmed
+        path: qc/multiqc_trimmed_report_multiqc_report.html
