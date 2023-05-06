@@ -71,6 +71,8 @@ more details and figures in separate deseq2.md
 
 10,11: performed gsea using fgsea.
 
+we should use shrunked fold changes
+
 performing on Reactome pathways did not gave promising results, so performed on KEGG pathways.
 
 Collibri provided slightly better(has smaller padj value) results then KAPA but found similar pathways:
@@ -78,10 +80,15 @@ Collibri provided slightly better(has smaller padj value) results then KAPA but 
 some pathways were related to cancer:
 
 KEGG_BASAL_CELL_CARCINOMA
+
 KEGG_COLORECTAL_CANCER
+
 KEGG_ENDOMETRIAL_CANCER
+
 KEGG_WNT_SIGNALING_PATHWAY
+
 KEGG_PATHWAYS_IN_CANCER
+
 KEGG_REGULATION_OF_ACTIN_CYTOSKELETON
 
 collibri:
