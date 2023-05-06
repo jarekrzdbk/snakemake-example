@@ -1,4 +1,3 @@
-*gz
 .snakemake
 mapped_reads
 sorted_reads
