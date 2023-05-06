@@ -14,6 +14,8 @@ rule extract_data:
         "genome/chr19_20Mb.bed",
         "genome/chr19_20Mb.fa",
         "genome/chr19_20Mb.gtf"
+    conda:
+        "environment.yml"
     shell:
         "tar -xf {input} -C genome"
 
@@ -23,7 +25,8 @@ rule fastqc_raw:
         #test_input(config["sampleType"], config["tissueType"])
     output:
         fq1=["qc/raw/{read}_R{r}_001_fastqc.html"],
-        #directory("qc/raw")
+    conda:
+        "environment.yml"
     shell:
         r"""
         fastqc {input.fq1} -o qc/raw
@@ -35,6 +38,8 @@ rule multiqc_dir:
         expand("qc/raw/{read}_R{r}_001_fastqc.html", read=READS, r=["1","2"])
     output:
         "qc/multiqc_report.html"
+    conda:
+        "environment.yml"
     params:
         extra=""  # Optional: extra parameters for multiqc.
     log:
@@ -48,6 +53,8 @@ rule bbduk_pe:
         adapters="adapters.fa",
     output:
         trimmed=["data/trimmed/{read}_R1_001.fastq.gz", "data/trimmed/{read}_R2_001.fastq.gz"]
+    conda:
+        "environment.yml"
     params:
         extra = lambda w, input: "ref={},adapters,artifacts ktrim=r k=23 mink=11 hdist=1 tpe tbo qtrim=r trimq=10".format(input.adapters),
     resources:
@@ -63,7 +70,8 @@ rule fastqc_trimmed:
         fq1=["data/trimmed/{read}_R1_001.fastq.gz", "data/trimmed/{read}_R2_001.fastq.gz"],
     output:
         fq1=["qc/trimmed_qc/{read}_R1_001_fastqc.html", "qc/trimmed_qc/{read}_R2_001_fastqc.html"],
-        #directory("qc/trimmed_qc")
+    conda:
+        "environment.yml"
     shell:
         r"""
         mkdir -p qc/trimmed_qc
@@ -75,6 +83,8 @@ rule multiqc_dir1:
         expand("qc/trimmed_qc/{read}_R{r}_001_fastqc.html", read=READS, r=["1","2"])
     output:
         "qc/multiqc_trimmed_report_multiqc_report.html"
+    conda:
+        "environment.yml"
     params:
         extra=""  # Optional: extra parameters for multiqc.
     log:
@@ -87,6 +97,8 @@ rule star_index:
         "genome/chr19_20Mb.fa"
     output:
         directory("genome/chr19_20Mb")
+    conda:
+        "environment.yml"
     params:
         sjdbOverhang = 100
     shell:
@@ -102,6 +114,8 @@ rule star_pe:
         index= directory("genome/chr19_20Mb")
     output:
         aln="star/{read}.bam"
+    conda:
+        "environment.yml"
     shell:
         """
         STAR --genomeDir {input.index} --readFilesIn {input.fq1} --outFileNamePrefix star/ --outSAMtype BAM SortedByCoordinate --readFilesCommand gunzip -c --outStd BAM_SortedByCoordinate > {output.aln}
@@ -112,6 +126,8 @@ rule samtools_index:
         bam="star/{read}.bam",
     output:
         bai="star/{read}.bam.bai",
+    conda:
+        "environment.yml"
     shell:
         """
         echo {input.bam}
@@ -129,6 +145,8 @@ rule featureCounts:
             ".featureCounts",
             ".featureCounts.summary"
         ),
+    conda:
+        "environment.yml"
     params:
         strand = "1" #if input(" ").startswith("Collibri") else "2"# or "2", depending on the sample preparation method
     shell:
