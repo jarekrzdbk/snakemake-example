@@ -1,5 +1,8 @@
 Implementation homework for transcriptomics
 
+Build status
+![Snakemake CI](https://github.com/jarekrzdbk/snakemake-homework/actions/workflows/main.yml/badge.svg)
+
 As discribed in task:
 
 1. performed fastqc
