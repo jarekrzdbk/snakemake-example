@@ -98,3 +98,8 @@ collibri:
 kappa:
 
 ![kapa-pathways](/gsea/kapa-pathways.png)
+
+
+here is DAG of snakemake workflow:
+
+![dag](/dag.svg)
