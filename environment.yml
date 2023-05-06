@@ -1,0 +1,13 @@
+name: test
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - gdown
+  - snakemake-minimal 
+  - fastqc
+  - multiqc
+  - bbmap
+  - star
+  - bioconductor-deseq2
+  - subread
