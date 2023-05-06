@@ -11,3 +11,4 @@ dependencies:
   - star
   - bioconductor-deseq2
   - subread
+  - snakemake-wrapper-utils
