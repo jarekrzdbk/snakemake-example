@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/636872990.svg)](https://zenodo.org/badge/latestdoi/636872990)
+
 # Example of Snakemake Workflow Implementation for Transcriptomics Tasks
 
 ## Github Pipeline:
