@@ -1,108 +1,94 @@
-Implementation homework for transcriptomics
+# Example of Snakemake Workflow Implementation for Transcriptomics Tasks
 
-Build status
+## Github Pipeline:
+**Build Status**  
 ![Snakemake CI](https://github.com/jarekrzdbk/snakemake-homework/actions/workflows/main.yml/badge.svg)
 
-As discribed in task:
+## Implemented Tasks:
 
-1. performed fastqc
+1. **Performed FastQC**
 
-2. performed multiqc
+2. **Performed MultiQC**
 
-3. trimmed barcodes
+3. **Trimmed Barcodes**
 
-4. performed fastqc on trimmed 
+4. **Performed FastQC on Trimmed Sequences**
 
-5. performed multiqc on trimmed
+5. **Performed MultiQC on Trimmed Sequences**
 
-the biggest indicator of succesful removal of adapters is Adapter content plot:
+The biggest indicator of successful removal of adapters is the Adapter Content plot:
 
-Before trimming            |  after trimming
-:-------------------------:|:-------------------------:
-![notTrimmed](qc_plots/fastqc_adapter_content_plot.png)  |  ![trimmed](qc_plots/fastqc_adapter_content_plot_trimmed.png)
+| Before Trimming                                  | After Trimming                                   |
+|:------------------------------------------------:|:------------------------------------------------:|
+| ![notTrimmed](qc_plots/fastqc_adapter_content_plot.png)  |  ![trimmed](qc_plots/fastqc_adapter_content_plot_trimmed.png) |
 
-6. Used STAR aliger
+6. **Used STAR Aligner**
 
-7. indexed bam with samtools index, and featureCounts
+7. **Indexed BAM with Samtools Index, and FeatureCounts**
 
-here we specify strandness:
+Here we specify strandness:  
+0: Not stranded  
+1: Stranded  
+2: Reversely stranded
 
-0 not stranded
+For Collibri, use 1 as it is stranded.  
+For KAPA, use 2 as it is reversely stranded.
 
-1 stranded
+8. **Used DESeq2 to Perform Differential Expression (DE) Analysis Comparing UHRR vs HBR**
 
-2 reversly stranded
+As a result, obtained DE genes with p-adjusted values:
 
-Collibri is stranded, therefore 1
-
-KAPA is reversly stranded, therefore 2
-
-8. Used DESeq2 to perform DE analysis comparing UHRRvsHBR:
-
-as a result obtained DE genes with padj values:
-
-For collibri
+For Collibri:  
 ![collibri](/condition_treated_results.csv)
 
-and KAPA
+And KAPA:  
 ![KAPA](/condition_treated_results_kapa.csv)
 
-also volkano plots:
+Also, volcano plots:
 
-for collibri:
-![collibri-volkano](/deseq2_files/figure-gfm/collibri-volkano-1.png)
+For Collibri:  
+![collibri-volcano](/deseq2_files/figure-gfm/collibri-volcano-1.png)
 
-and KAPA:
+And KAPA:  
+![kapa-volcano](/deseq2_files/figure-gfm/kapa-volcano-1.png)
 
-![kapa-volkano](/deseq2_files/figure-gfm/kapa-volkano-1.png)
-it has Snakemake file, which will create plot
+It has a Snakemake file, which will create the plot.
 
-9. performed PCA using DE genes:
+9. **Performed PCA Using DE Genes**
 
-plot for collibri:
-
+Plot for Collibri:  
 ![collibri-pca](/deseq2_files/figure-gfm/collibri-pca-1.png)
 
-and kapa:
-
+And KAPA:  
 ![kapa-pca](/deseq2_files/figure-gfm/kapa-pca-1.png)
 
-it is clear that HBR and UHRR are separeted into 2 different clusters.
+It is clear that HBR and UHRR samples are separated into two distinct clusters.
 
-more details and figures in separate deseq2.md
+More details and figures in separate `deseq2.md`.  
 ![deseq2.md](/deseq2.md)
 
-10,11: performed gsea using fgsea.
+10. **Performed GSEA Using fgsea**
 
-we should use shrunked fold changes
+We should use shrunken fold changes.
 
-performing on Reactome pathways did not gave promising results, so performed on KEGG pathways.
+Performing on Reactome pathways did not give promising results, so performed on KEGG pathways.
 
-Collibri provided slightly better(has smaller padj value) results then KAPA but found similar pathways:
+Collibri showed slightly better results (with smaller p-adjusted values) than KAPA but found similar pathways. Some pathways were related to cancer:
 
-some pathways were related to cancer:
+- KEGG_BASAL_CELL_CARCINOMA
+- KEGG_COLORECTAL_CANCER
+- KEGG_ENDOMETRIAL_CANCER
+- KEGG_WNT_SIGNALING_PATHWAY
+- KEGG_PATHWAYS_IN_CANCER
+- KEGG_REGULATION_OF_ACTIN_CYTOSKELETON
 
-KEGG_BASAL_CELL_CARCINOMA
-
-KEGG_COLORECTAL_CANCER
-
-KEGG_ENDOMETRIAL_CANCER
-
-KEGG_WNT_SIGNALING_PATHWAY
-
-KEGG_PATHWAYS_IN_CANCER
-
-KEGG_REGULATION_OF_ACTIN_CYTOSKELETON
-
-collibri:
-
+For Collibri:  
 ![collibri-pathways](/gsea/collibri_pathways.png)
 
-kappa:
-
+For KAPA:  
 ![kapa-pathways](/gsea/kapa-pathways.png)
 
-
-here is DAG of snakemake workflow:
+## DAG of Snakemake Workflow:
 
 ![dag](/dag.svg)
+
